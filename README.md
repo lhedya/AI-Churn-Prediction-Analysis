@@ -96,8 +96,8 @@ simulasi profitabilitas nyata dari penerapan model.
 
 | Komponen | Perhitungan | Nilai |
 |----------|-------------|-------|
-| Biaya retensi per pelanggan | — | $50 |
-| Pendapatan hilang per churn | — | $500 |
+| Biaya retensi per pelanggan | Asumsi biaya program retensi per pelanggan (diskon, loyalty outreach) | $50 |
+| Pendapatan hilang per churn | Estimasi Customer Lifetime Value yang hilang jika pelanggan churn | $500 |
 | Total biaya retensi | (FP + TP) × $50 = 50.000 × $50 | $2,500,000 |
 | Pendapatan diselamatkan | TP × $500 = 49.995 × $500 | $24,997,500 |
 | **Net Profit Bersih** | Saved − Cost − FN Loss | **$22,495,000** |
