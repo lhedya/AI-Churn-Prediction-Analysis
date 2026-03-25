@@ -1,172 +1,219 @@
-# 🚨 AI Churn Prediction & Analysis
-**End-to-End Machine Learning Classification | Machine Learning Bootcamp - Dibimbing.id**
+# 🔍 Customer Churn Prediction
+### End-to-End Machine Learning Classification Project
 
-**Author:** Lhedya Monica Ismon
+<p align="left">
+  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Scikit--Learn-F7931E?style=flat&logo=scikit-learn&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Jupyter-F37626?style=flat&logo=jupyter&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Status-Completed-2ea44f?style=flat"/>
+  <img src="https://img.shields.io/badge/Recall-1.000-brightgreen?style=flat"/>
+</p>
+
+> Membangun model klasifikasi machine learning untuk memprediksi pelanggan yang akan churn, dengan fokus pada metrik **Recall** agar tidak ada pelanggan berisiko yang terlewat — serta menghitung simulasi profitabilitas nyata dari penerapan model.
 
 ---
 
-## 🎯 Objective
-Membangun model klasifikasi machine learning untuk memprediksi 
-pelanggan yang akan churn, dengan fokus pada metrik Recall agar 
-tidak ada pelanggan berisiko yang terlewat, serta menghitung 
-simulasi profitabilitas nyata dari penerapan model.
+## 📌 Table of Contents
+- [Business Problem](#-business-problem)
+- [Dataset](#-dataset)
+- [Workflow](#-workflow)
+- [EDA Insights](#-eda-insights)
+- [Feature Engineering](#%EF%B8%8F-feature-engineering)
+- [Model Comparison](#-model-comparison--evaluation)
+- [Business Simulation](#-business-profit-simulation)
+- [Strategic Recommendations](#-strategic-recommendations)
+- [How to Run](#-how-to-run)
+
+---
+
+## 💼 Business Problem
+
+Customer churn adalah salah satu tantangan terbesar dalam industri subscription-based. Kehilangan satu pelanggan bukan hanya kehilangan revenue saat ini, tetapi juga **Customer Lifetime Value (CLV)** jangka panjang.
+
+**Pertanyaan Bisnis:**
+- Pelanggan mana yang paling berisiko untuk churn?
+- Faktor apa yang paling dominan mendorong churn?
+- Seberapa besar potensi pendapatan yang bisa diselamatkan dengan model prediksi?
+
+> **Pendekatan:** Karena biaya *False Negative* (pelanggan churn tidak terdeteksi = ~$500 hilang) jauh lebih mahal dari *False Positive* (program retensi tidak perlu = ~$50), maka **Recall dipilih sebagai metrik utama**.
 
 ---
 
 ## 🗃️ Dataset
+
 | Info | Detail |
 |------|--------|
-| Sumber | Kaggle — customer_churn_dataset-training-master.csv |
-| Target | Churn: 1 = berhenti berlangganan, 0 = tetap |
+| Sumber | [Kaggle — Customer Churn Dataset](https://www.kaggle.com/datasets/muhammadshahidazeem/customer-churn-dataset) |
+| File | `customer_churn_dataset-training-master.csv` |
+| Target | `Churn`: 1 = berhenti berlangganan, 0 = tetap |
 | Fitur Kategorikal | Gender, Subscription Type, Contract Length |
 | Fitur Numerik | Age, Tenure, Usage Frequency, Support Calls, Payment Delay, Total Spend, Last Interaction |
-| Missing Values | Ada — ditangani dengan dropna() |
+| Missing Values | Ada — ditangani dengan `dropna()` |
 | Duplikat | Tidak ditemukan |
 
 ---
 
-## 📋 Analysis Steps
-1. EDA kategorikal → Chi-Square Test & Cramér's V
-2. EDA numerik → Welch's T-Test & Violin Plot
-3. Feature Engineering (5 langkah)
-4. Training 4 model: Logistic Regression, KNN, Decision Tree, SVM
-5. Evaluasi model berbasis Recall
-6. Simulasi profitabilitas & ROI
+## 🔄 Workflow
+
+```
+Data Loading
+    ↓
+Exploratory Data Analysis (EDA)
+    ↓ Chi-Square + Cramér's V  (kategorikal)
+    ↓ Welch's T-Test + Violin Plot  (numerik)
+Feature Engineering
+    ↓ Split → Drop ID → Encode → Scale → SMOTE
+Model Training  (4 Models)
+    ↓ Logistic Regression | KNN | Decision Tree | SVM
+Model Evaluation
+    ↓ Recall · Confusion Matrix · Learning Curve
+Best Model Selection → Business Profit Simulation
+```
 
 ---
 
 ## 📊 EDA Insights
 
-### Variabel Kategorikal (Chi-Square + Cramér's V)
-| Variabel | Churn Rate | Cramér's V | Insight |
-|----------|-----------|------------|---------|
-| Contract Length (Monthly) | 100% | 0.43 (Kuat) | Semua pelanggan kontrak bulanan churn! |
-| Contract Length (Annual/Quarterly) | ~46% | 0.43 (Kuat) | Kontrak jangka panjang jauh lebih loyal |
-| Gender (Female) | 66% | 0.18 (Sedang) | Perempuan lebih berisiko churn vs laki-laki (49%) |
-| Subscription Type | 56-58% | 0.02 (Lemah) | Tipe paket bukan faktor utama churn |
+### Variabel Kategorikal — Chi-Square Test & Cramér's V
 
-### Variabel Numerik (Welch's T-Test + Violin Plot)
+| Variabel | Churn Rate | Cramér's V | Kekuatan Hubungan |
+|----------|:----------:|:----------:|:-----------------:|
+| Contract Length (Monthly) | **100%** | 0.43 | 🔴 Kuat |
+| Contract Length (Annual/Quarterly) | ~46% | 0.43 | 🔴 Kuat |
+| Gender (Female) | 66% | 0.18 | 🟡 Sedang |
+| Gender (Male) | 49% | 0.18 | 🟡 Sedang |
+| Subscription Type | 56–58% | 0.02 | 🟢 Lemah |
+
+**Key Finding:** Seluruh pelanggan dengan kontrak **Monthly** terbukti churn — ini adalah *strongest signal* dalam dataset.
+
+---
+
+### Variabel Numerik — Welch's T-Test
+
 | Fitur | Temuan | Implikasi Bisnis |
 |-------|--------|-----------------|
-| Tenure | Churn → tenure lebih pendek | Pelanggan baru paling rentan — butuh onboarding kuat |
-| Support Calls | Churn → lebih banyak panggilan | Keluhan sering = masalah belum terselesaikan |
-| Payment Delay | Churn → keterlambatan lebih tinggi | Tawarkan fleksibilitas pembayaran |
-| Usage Frequency | Churn → frekuensi lebih rendah | Dorong engagement dengan notifikasi |
-| Last Interaction | Churn → lebih lama tidak interaksi | Proaktif outreach untuk pelanggan pasif |
-| Total Spend | Churn → pengeluaran lebih rendah | Sorot manfaat layanan ke pelanggan low-spend |
-| Age | Distribusi usia churn lebih luas | Semua segmen usia bisa churn — personalisasi retention |
+| **Tenure** | Churn → tenure lebih pendek | Pelanggan baru paling rentan — perkuat onboarding |
+| **Support Calls** | Churn → lebih sering hubungi CS | Keluhan tidak terselesaikan → tingkatkan kualitas support |
+| **Payment Delay** | Churn → lebih sering terlambat bayar | Tawarkan fleksibilitas pembayaran |
+| **Usage Frequency** | Churn → jarang gunakan layanan | Dorong engagement lewat notifikasi & kampanye |
+| **Last Interaction** | Churn → lebih lama tidak berinteraksi | Proaktif outreach untuk pelanggan pasif |
+| **Total Spend** | Churn → cenderung low-spender | Sorot value layanan ke segmen ini |
+| **Age** | Distribusi usia churn lebih luas | Semua segmen usia berisiko — perlu pendekatan personal |
 
 ---
 
 ## ⚙️ Feature Engineering
-| # | Langkah | Yang Dilakukan | Alasan |
-|---|---------|---------------|--------|
-| 1 | Train-Test Split 80/20 | Stratified split menggunakan stratify=y | Proporsi kelas Churn dipertahankan di kedua set |
-| 2 | Drop CustomerID | Hapus kolom identifier dari X_train & X_test | Bukan fitur prediktif — bisa membuat model menghafal ID |
-| 3 | Label Encoding | Gender: Male=1, Female=0 | Variabel binary cukup 0/1 |
-| 4 | One-Hot Encoding | Subscription Type & Contract Length | Cegah asumsi ordinal yang salah |
-| 5 | StandardScaler + SMOTE | Scaling numerik + seimbangkan kelas | SMOTE hanya pada train data — tidak ada data leakage |
+
+| # | Langkah | Detail | Alasan |
+|---|---------|--------|--------|
+| 1 | **Train-Test Split 80/20** | `stratify=y` | Proporsi kelas dipertahankan di kedua set |
+| 2 | **Drop CustomerID** | Hapus dari X_train & X_test | Bukan fitur prediktif — cegah model menghafal ID |
+| 3 | **Label Encoding** | Gender: Male=1, Female=0 | Variabel binary cukup representasi 0/1 |
+| 4 | **One-Hot Encoding** | Subscription Type & Contract Length | Cegah asumsi ordinal yang salah |
+| 5 | **StandardScaler + SMOTE** | Scaling numerik + balancing kelas | SMOTE **hanya pada train data** — zero data leakage |
 
 ---
 
-## 🤖 Model Comparison & Evaluasi
+## 🤖 Model Comparison & Evaluation
 
 | Model | Recall Train | Recall Test | Gap | Status |
-|-------|-------------|-------------|-----|--------|
-| Logistic Regression | 0.870 | 0.870 | 0.000 | Stabil |
-| KNN (SMOTE) | 0.943 | 0.925 | 0.018 | Baik |
-| **Decision Tree** | **1.000** | **1.000** | **0.000** | **TERBAIK** |
-| SVM (LinearSVC) | 0.867 | 0.867 | 0.000 | Stabil |
-
-> **Mengapa Recall sebagai metrik utama?**
-> Biaya False Negative (pelanggan churn tidak terdeteksi = $500 hilang)
-> jauh lebih mahal dari False Positive (program retensi tidak perlu = $50).
-> Maka Recall adalah metrik paling relevan untuk kasus ini.
+|-------|:-----------:|:-----------:|:---:|--------|
+| Logistic Regression | 0.870 | 0.870 | 0.000 | ✅ Stabil |
+| KNN (+ SMOTE) | 0.943 | 0.925 | 0.018 | ✅ Baik |
+| **Decision Tree** | **1.000** | **1.000** | **0.000** | 🏆 **TERBAIK** |
+| SVM (LinearSVC) | 0.867 | 0.867 | 0.000 | ✅ Stabil |
 
 ---
 
-## 🏆 Model Terpilih: Decision Tree
-- Recall = 1.000 pada KEDUA train dan test data — gap = 0.000
-- Confusion Matrix: TN=38.162 | FP=5 | FN=5 | TP=49.995
-- Dari 50.000 pelanggan churn, model berhasil mendeteksi 49.995 (hanya 5 terlewat)
+## 🏆 Best Model: Decision Tree
+
+```
+Confusion Matrix — Decision Tree (Test Set)
+
+                  Predicted: 0    Predicted: 1
+Actual: 0  (Non-Churn)  38,162            5
+Actual: 1  (Churn)           5       49,995
+```
+
+| Metrik | Nilai |
+|--------|:-----:|
+| Recall | **1.000** |
+| Precision | ~1.000 |
+| F1-Score | ~1.000 |
+| False Negatives | **5** dari 50.000 pelanggan churn |
+
+> Dari **50.000 pelanggan yang benar-benar churn**, model hanya melewatkan **5 orang**.
 
 ---
 
-## 💰 Simulasi Profitabilitas
+## 💰 Business Profit Simulation
 
-| Komponen | Perhitungan | Nilai |
-|----------|-------------|-------|
-| Biaya retensi per pelanggan | Asumsi biaya program retensi per pelanggan (diskon, loyalty outreach) | $50 |
-| Pendapatan hilang per churn | Estimasi Customer Lifetime Value yang hilang jika pelanggan churn | $500 |
-| Total biaya retensi | (FP + TP) × $50 = 50.000 × $50 | $2,500,000 |
+| Komponen | Detail | Nilai |
+|----------|--------|------:|
+| Biaya retensi / pelanggan | Program diskon, loyalty outreach | $50 |
+| Pendapatan hilang / churn | Estimasi Customer Lifetime Value | $500 |
+| Total biaya retensi | (FP + TP) × $50 | $2,500,000 |
 | Pendapatan diselamatkan | TP × $500 = 49.995 × $500 | $24,997,500 |
+| FN Loss | 5 × $500 | $2,500 |
 | **Net Profit Bersih** | Saved − Cost − FN Loss | **$22,495,000** |
-| **ROI Model** | Per $1 investasi | **~$10 pendapatan diselamatkan** |
+| **ROI Model** | Per $1 investasi retensi | **~$10** |
 
 ---
 
-## 💡 Kesimpulan
-Decision Tree adalah model terbaik dengan Recall = 1.000 pada train 
-dan test, membuktikan kemampuannya mendeteksi hampir 100% pelanggan 
-yang akan churn. Contract Length adalah faktor paling dominan 
-(Cramér's V = 0.43) — pelanggan kontrak bulanan memiliki churn rate 
-100%. Dengan menerapkan model ini, perusahaan berpotensi menghasilkan 
-net profit bersih $22.495.000 dengan ROI ~$10 per $1 yang 
-diinvestasikan untuk program retensi.
+## 💡 Strategic Recommendations
+
+| Prioritas | Segmen | Rekomendasi |
+|:---------:|--------|-------------|
+| 🔴 Tinggi | Kontrak Bulanan (churn 100%) | Insentif upgrade ke kontrak tahunan/kuartalan |
+| 🔴 Tinggi | Pelanggan Baru (tenure pendek) | Program onboarding intensif di 3 bulan pertama |
+| 🟡 Sedang | Support Calls tinggi | Tingkatkan kualitas CS & first-call resolution rate |
+| 🟡 Sedang | Payment Delay tinggi | Fleksibilitas pembayaran & opsi cicilan |
+| 🟢 Normal | Low Usage Frequency | Notifikasi & kampanye re-engagement |
+| 🟢 Normal | Pelanggan Perempuan (churn 66%) | Personalisasi program retensi berbasis segmen |
 
 ---
 
-## ✅ Kelebihan Model
-- Recall = 1.000 — tidak ada pelanggan churn yang terlewat
-- 4 model diuji dan dibandingkan dengan metrik tepat (Recall)
+## ✅ Strengths & ⚠️ Areas for Improvement
+
+**Kelebihan:**
+- Recall = 1.000 — hampir tidak ada pelanggan churn yang terlewat
+- 4 model diuji dan dibandingkan dengan metrik yang tepat
 - SMOTE hanya pada train data — tidak ada data leakage
-- Validasi statistik dengan Chi-Square, Cramér's V, Welch T-Test
-- Simulasi profitabilitas konkret dengan asumsi biaya transparan
+- Validasi statistik dengan Chi-Square, Cramér's V, dan Welch's T-Test
+- Simulasi profitabilitas konkret dengan asumsi biaya yang transparan
 
-## ⚠️ Peluang Peningkatan
-- Recall 1.000 bisa mengindikasikan overfitting — perlu k-fold CV
+**Peluang Peningkatan:**
+- Recall 1.000 bisa mengindikasikan overfitting — perlu validasi k-fold CV
 - Tambahkan Random Forest / XGBoost untuk perbandingan lebih robust
 - Feature importance Decision Tree belum divisualisasikan
-- Threshold tuning pada model lain untuk optimalkan precision-recall
-- Simulasi profitabilitas bisa diperkaya dengan sensitivity analysis
+- Threshold tuning pada model lain untuk optimasi precision-recall trade-off
+- Sensitivity analysis pada simulasi profitabilitas
 
 ---
 
-## 💼 Rekomendasi Strategis
-| Segmen | Rekomendasi |
-|--------|-------------|
-| Kontrak Bulanan (churn 100%) | Tawarkan insentif upgrade ke kontrak tahunan/kuartalan |
-| Pelanggan Baru (tenure pendek) | Program onboarding yang kuat di 3 bulan pertama |
-| Support Calls tinggi | Tingkatkan kualitas customer service & resolusi masalah |
-| Payment Delay tinggi | Tawarkan fleksibilitas pembayaran & cicilan |
-| Low Usage Frequency | Kirim notifikasi & kampanye re-engagement |
-| Pelanggan Perempuan (churn 66%) | Personalisasi program retensi untuk segmen ini |
+## 🔧 Tech Stack
 
----
-
-## 🔧 Tools & Libraries
-\`\`\`python
-import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import LinearSVC
+```python
+import pandas as pd, numpy as np                          # Data manipulation
+import seaborn as sns, matplotlib.pyplot as plt           # Visualization
+from sklearn.tree import DecisionTreeClassifier           # Best model
+from sklearn.linear_model import LogisticRegression       # Baseline
+from sklearn.neighbors import KNeighborsClassifier        # KNN
+from sklearn.svm import LinearSVC                         # SVM
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import recall_score, confusion_matrix, classification_report
-from imblearn.over_sampling import SMOTE
-from scipy.stats import chi2_contingency, ttest_ind
-import joblib
-\`\`\`
+from imblearn.over_sampling import SMOTE                  # Class balancing
+from scipy.stats import chi2_contingency, ttest_ind       # Statistical tests
+```
+
+
+## 👩‍💻 Author
+
+**Lhedya Monica Ismon**
+
+[![LinkedIn](https://www.linkedin.com/in/lhedya/)]
 
 ---
 
-## 📁 File Structure
-- \`notebook/\` — Google Colab (.ipynb)
-
----
-
-*Lhedya Monica Ismon | Machine Learning Bootcamp | Dibimbing.id*
+<p align="center"><i>Made with curiosity and lots of ☕ | 2025</i></p>
